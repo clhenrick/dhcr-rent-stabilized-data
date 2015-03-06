@@ -1,11 +1,11 @@
 DHCR Rent Stabilized Data
 =========================
 
-Data containing the block and lot numbers of NYC addresses that have rent stabilized residential units registered with the [DHCR](http://www.nyshcr.org/).
+Data containing the street address(es), block and lot numbers of NYC properties that have rent stabilized apartments that are registered with the [DHCR](http://www.nyshcr.org/).
 
 ## Process
 
-From a FOIL request I was able to obtain the following years in xcell spreadsheet format:  
+From a FOIL request I was able to obtain the following years in Excel spreadsheet format:  
 
 - 2002
 - 2005
@@ -14,10 +14,43 @@ From a FOIL request I was able to obtain the following years in xcell spreadshee
 - 2012
 - 2013
 
-So far I've converted only the 2012 data to CSV format. This file contains the complete BBL number for each row. This data was then joined to 2012 Map Pluto v2 data. I then selected all rows that did not have null dhcr fields and exported as GeoJSON. This data is included in the `geojson` folder.
+Typically each file contains a sheet for each borough. Using a Node JS script I was able to combine the sheets in each excel file, add the row's respective borough code and output the data to CSV format. From here a BBL number can be concatenated and the data can be joined with NYC's Map PLUTO data, available from Bytes of the Big Apple data portal.
 
-## To Do
-When I have a minute I intend to write a script to convert the xlsx files to csv format with full BBL numbers, as well as provide the data joined to map pluto for corresponding years. 
+## Notes on the Data
+### What it doesn't contain:
+The data **does not** contain the actual apartment numbers or even number of rent stabilized apartments per building. It is only a list of addresses of properties that have at least one *registered rent stabilized unit* in them (see discrepancies below for more info).
+
+This list also does not contain buildings that have rent controlled units. 
+
+### What it does contain
+Prior to 2009 the data is relatively organized and contains useful information. However 2005's data looks incomplete as the number of rows are substantially less than later years. 2002's data does not contain headers nor block or lot numbers.
+
+### Discrepancies 
+As the process of registering rent-stabilized apartments with the DHCR is completely voluntary by the landlord the data differs from year to year. As such it should not be assumed that the DHCR's rent stabilized building lists are completely authoritative. Generally speaking a building in NYC may contain rent-stabilized apartments if it was either:
+
+1. Built before 1974, contains more than 6 residential units and is not a coop or condo.
+2. Was built recently and the developer choose to take advantage of tax abatements such as J-51 which require a certain number of units to be placed in rent stabilization, often for a finite period.
+
+Thus it may be necessary to do a more comprehensive analysis of Map PLUTO tax lot data as well as new development since 1974 that has received tax abatements to get a better estimate of properties with rent stabilized units.
+
+## Script Usage
+
+You can run the `index.js` script on the excel data to convert this data yourself. Make sure you have Node JS installed and accessible from the command line. `cd` to this repo after downloading it and do:
+
+```
+npm install
+```
+to grab the script's dependencies and then do:
+
+```
+node index.js 'xlsx/2013 DHCR-5 Boros.xlsx' 'dhcr2013.csv'
+```
+to process the data to CSV format. Change the name of the `xlsx` file to whatever file you'd like to convert as well as the `csv` file name to whatever you'd like to name the output.
+
+**Note:** I manually either removed or added the `CITY` column from some of the `xlsx` files as they were not consistent across boroughs / sheets. I then saved the edited files with the `xls` extensions. As such the node script will parse excel files with either `xlsx` or `xls` extensions.
+
+
+
 
 ## FOIL Request Info
 
@@ -33,7 +66,7 @@ __*The Request was stated as follows:*__
    All data tables of the Rent Stabilized Building Lists for 2014 for all boroughs of New York City, similar to the one for the Bronx from the year 2012 found at this URL: 
    http://www.nycrgb.org/downloads/resources/sta_bldngs/2012BronxBldgs.pdf
 
-   If possible please send me the lists in Comma Separated Value (CSV) format, a data format that can be read by most software. Data from PDFs cannot be analyzed with common software such as microsoft excel or libre office.
+   If possible please send me the lists in Comma Separated Value (CSV) format, a data format that can be read by most software. Data from PDFs cannot be analyzed with common software such as Microsoft excel or libre office.
    If all of the requested records cannot be emailed to me, please inform me by email of the portions that can be emailed and advise me of the cost for reproducing the remainder of the records requested ($0.25 per page or actual cost of reproduction).
 
    If the requested records cannot be emailed to me due to the volume of records identified in response to my request, please advise me of the actual cost of copying all records onto a CD or floppy disk.
@@ -62,5 +95,3 @@ __*To which they replied with the additional data in this repo with the followin
 We have listings for most years as far back as 2002. I have attached links to the files for the years we have available. 
 
 Please note that the building list for each year only includes buildings whose owners have registered buildings containing rent stabilized units by the date of the database update. If an owner did not file, or filed late, the building will not appear in our list. Also, if a building contains rent controlled unit(s) but no rent stabilized units, the building will not appear on these lists. 
-
-Let me know if you have further questions.
