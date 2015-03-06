@@ -59,7 +59,7 @@ function parseXlsxSheets(file) {
   workbook = xlsx.readFile(file);
   sheets = workbook.SheetNames;
   worksheet_to_csv = function(worksheet) {
-    xlsx.utils.sheet_to_csv(worksheet);
+    return xlsx.utils.sheet_to_csv(worksheet);
   }; 
   parseSheets(sheets);
 }
