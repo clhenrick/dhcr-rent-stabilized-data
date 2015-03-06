@@ -1,0 +1,32 @@
+{
+  "name": "dhcr-rent-stabilized-data",
+  "version": "0.1.0",
+  "description": "'parsing rent stabilization building list data from ny hcr'",
+  "main": "index.js",
+  "scripts": {
+    "test": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clhenrick/dhcr-rent-stabilized-data.git"
+  },
+  "keywords": [
+    "'rent-stabilization'",
+    "'nyc'",
+    "'dhcr'",
+    "'rent-regulation'"
+  ],
+  "author": "Chris Henrick <chrishenrick@gmail.com> (http://chrishenrick.com)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/clhenrick/dhcr-rent-stabilized-data/issues"
+  },
+  "homepage": "https://github.com/clhenrick/dhcr-rent-stabilized-data",
+  "dependencies": {
+    "csv-parse": "0.0.9",
+    "csv-stringify": "0.0.6",
+    "underscore": "^1.8.2",
+    "xls": "^0.5.1",
+    "xlsjs": "^0.7.5"
+  }
+}
