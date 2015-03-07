@@ -23,7 +23,7 @@ The data **does not** contain the actual apartment numbers or even number of ren
 This list also does not contain buildings that have rent controlled units. 
 
 ### What it does contain
-Prior to 2009 the data is relatively organized and contains useful information. However 2005's data looks incomplete as the number of rows are substantially less than later years. 2002's data does not contain headers nor block or lot numbers.
+Prior to 2009 the data is relatively organized and contains useful information. However 2005's data looks incomplete as the number of rows differ substantially from 2002 and 2009. 2002's data does not contain headers, nor block or lot numbers. The first column appears to be zipcodes so theoretically the data could be geocoded using the NYC Geoclient API.
 
 ### Discrepancies 
 As the process of registering rent-stabilized apartments with the DHCR is completely voluntary by the landlord the data differs from year to year. As such it should not be assumed that the DHCR's rent stabilized building lists are completely authoritative. Generally speaking a building in NYC may contain rent-stabilized apartments if it was either:
