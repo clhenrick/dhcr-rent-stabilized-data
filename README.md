@@ -18,7 +18,7 @@ Typically each file contains a sheet for each borough. Using a Node JS script I 
 
 ## Notes on the Data
 ### What it doesn't contain:
-The data **does not** contain the actual apartment numbers or even number of rent stabilized apartments per building. It is only a list of addresses of properties that have at least one *registered rent stabilized unit* in them (see discrepancies below for more info).
+The data **does not** contain the actual apartment numbers or the number of rent stabilized apartments per building. It is only a list of addresses of properties that have at least one *registered rent stabilized unit* in them (see discrepancies below for more info).
 
 This list also does not contain buildings that have rent controlled units. 
 
