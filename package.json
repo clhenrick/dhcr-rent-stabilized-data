@@ -26,7 +26,7 @@
     "csv-parse": "0.0.9",
     "csv-stringify": "0.0.6",
     "underscore": "^1.8.2",
-    "xls": "^0.5.1",
-    "xlsjs": "^0.7.5"
+    "xlsjs": "^0.7.5",
+    "xlsx": "^0.7.12"
   }
 }
