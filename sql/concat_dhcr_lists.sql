@@ -1,6 +1,8 @@
 -- PostgreSQL
---  combine data for all years into one table 
--- to find distinct addresses & BBL numbers
+--  combine data for all years into one table in order to find all distinct addresses
+--  these addresses can then be geocoded using the NYC GeoClient API
+
+-- create a table to insert data from all years to
 create table dhcr_all (
   zip integer,
   bldgno1 text,
@@ -20,6 +22,41 @@ create table dhcr_all (
   boro_code integer
 );
 
+--  insert 2005 data, it lacks block and lot numbers, so they aren't inserted
+insert into dhcr_all (
+  zip,
+  bldgno1,
+  street_name1,
+  street_suffix1,
+  bldgno2,
+  street_name2,
+  street_suffix2,  
+  bldgno3,
+  street_name3,
+  street_suffix3,  
+  status1,
+  status2,
+  status3,  
+  boro_code
+) 
+SELECT 
+  "ZIP",
+  "BLDGNO1",
+  "STREET1",
+  "STSUFX1",
+  "BLDGNO2",
+  "STREET2",
+  "BLDGNO3",
+  "STREET3",
+  "STSUFX3",
+  "STSUFX2",
+  "STATUS1",
+  "STATUS2",
+  "STATUS3",
+  "BORO_CODE"
+FROM dhcr2005;
+
+-- insert 2009 data
 insert into dhcr_all (
   zip,
   bldgno1,
@@ -40,6 +77,7 @@ insert into dhcr_all (
 ) 
 SELECT * FROM dhcr2009tmp;
 
+-- insert 2011 data
 insert into dhcr_all (
   zip,
   bldgno1,
@@ -60,6 +98,7 @@ insert into dhcr_all (
 ) 
 SELECT * FROM dhcr2011;
 
+-- insert 2012 data
 insert into dhcr_all (
   zip,
   bldgno1,
@@ -80,7 +119,7 @@ insert into dhcr_all (
 ) 
 SELECT * FROM dhcr2012;
 
--- 2013 doesn't have a bldg03, street3, stsufx3 columns
+-- insert 2013 data, it doesn't have a bldg03, street3, stsufx3 columns
 insert into dhcr_all (
   zip,
   bldgno1,
@@ -112,7 +151,38 @@ SELECT
   "BORO_CODE"
 FROM dhcr2013;
 
--- find and replace to make building numbers geocodable with the NYC Geoclient API
-update dhcr_all set bldgno1 = replace(bldgno1, ' TO ', '-');
-update dhcr_all set bldgno2 = replace(bldgno2, ' TO ', '-');
-update dhcr_all set bldgno3 = replace(bldgno3, ' TO ', '-');
+-- should return about 210,000 rows
+select count(*) from dhcr_all;
+
+-- add columns for splitting building number into low and high numbers
+alter table dhcr_all add column bldgno1a text;
+alter table dhcr_all add column bldgno1b text;
+
+-- split bldgno1 column into two separate numbers for geocoding with NYC Geoclient API
+update dhcr_all set bldgno1a = split_part(bldgno1, 'TO', 1);
+update dhcr_all set bldgno1b = split_part(bldgno1, 'TO', 2);
+
+-- find all distinct addresses
+select bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
+from dhcr_all
+group by bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
+
+-- returns a measley 53,000 rows, DHCR's data is obviously not complete!
+select count(*) from (
+  select bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
+  from dhcr_all
+  group by bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
+) as distinct_addresses;
+
+-- create a temporary table of the distinct addresses
+create table dhcr_all_tmp as (
+  select bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
+  from dhcr_all
+  group by bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
+);  
+
+-- delete table with duplicates
+drop table dhcr_all;
+
+-- rename tmp table
+alter table dhcr_all_tmp rename to dhcr_all;
