@@ -2,6 +2,9 @@
 --  combine data for all years into one table in order to find all distinct addresses
 --  these addresses can then be geocoded using the NYC GeoClient API
 
+-- drop table
+drop table dhcr_all
+
 -- create a table to insert data from all years to
 create table dhcr_all (
   zip integer,
@@ -155,30 +158,56 @@ FROM dhcr2013;
 select count(*) from dhcr_all;
 
 -- add columns for splitting building number into low and high numbers
-alter table dhcr_all add column bldgno1a text;
-alter table dhcr_all add column bldgno1b text;
+alter table dhcr_all add column bldgno1_low text;
+alter table dhcr_all add column bldgno1_high text;
+alter table dhcr_all add column bldgno2_low text;
+alter table dhcr_all add column bldgno2_high text;
+alter table dhcr_all add column bldgno3_low text;
+alter table dhcr_all add column bldgno3_high text;
 
 -- split bldgno1 column into two separate numbers for geocoding with NYC Geoclient API
-update dhcr_all set bldgno1a = split_part(bldgno1, 'TO', 1);
-update dhcr_all set bldgno1b = split_part(bldgno1, 'TO', 2);
+update dhcr_all set bldgno1_low = split_part(bldgno1, ' TO ', 1);
+update dhcr_all set bldgno1_high = split_part(bldgno1, ' TO ', 2);
+update dhcr_all set bldgno2_low = split_part(bldgno2, ' TO ', 1);
+update dhcr_all set bldgno2_high = split_part(bldgno2, ' TO ', 2);
+update dhcr_all set bldgno3_low = split_part(bldgno3, ' TO ', 1);
+update dhcr_all set bldgno3_high = split_part(bldgno3, ' TO ', 2);
 
 -- find all distinct addresses
-select bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
-from dhcr_all
-group by bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
+-- select bldgno1, bldgno1_low, bldgno1_high, street_name1, street_suffix1, 
+--   bldgno2, bldgno2_low, bldgno2_high, street_name2, street_suffix2, 
+--   bldgno3, bldgno3_low, bldgno3_high, street_name3, street_suffix3, 
+--   boro_code, zip
+-- from dhcr_all
+-- group by bldgno1, bldgno1_low, bldgno1_high, street_name1, street_suffix1, 
+--   bldgno2, bldgno2_low, bldgno2_high, street_name2, street_suffix2, 
+--   bldgno3, bldgno3_low, bldgno3_high, street_name3, street_suffix3, 
+--   boro_code, zip
 
 -- returns a measley 53,000 rows, DHCR's data is obviously not complete!
 select count(*) from (
-  select bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
+  select bldgno1, bldgno1_low, bldgno1_high, street_name1, street_suffix1, 
+    bldgno2, bldgno2_low, bldgno2_high, street_name2, street_suffix2, 
+    bldgno3, bldgno3_low, bldgno3_high, street_name3, street_suffix3, 
+    boro_code, zip
   from dhcr_all
-  group by bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
+  group by bldgno1, bldgno1_low, bldgno1_high, street_name1, street_suffix1, 
+    bldgno2, bldgno2_low, bldgno2_high, street_name2, street_suffix2, 
+    bldgno3, bldgno3_low, bldgno3_high, street_name3, street_suffix3, 
+    boro_code, zip
 ) as distinct_addresses;
 
 -- create a temporary table of the distinct addresses
 create table dhcr_all_tmp as (
-  select bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
+  select bldgno1, bldgno1_low, bldgno1_high, street_name1, street_suffix1, 
+    bldgno2, bldgno2_low, bldgno2_high, street_name2, street_suffix2, 
+    bldgno3, bldgno3_low, bldgno3_high, street_name3, street_suffix3, 
+    boro_code, zip
   from dhcr_all
-  group by bldgno1, bldgno1a, bldgno1b, street_name1, street_suffix1, boro_code, zip
+  group by bldgno1, bldgno1_low, bldgno1_high, street_name1, street_suffix1, 
+    bldgno2, bldgno2_low, bldgno2_high, street_name2, street_suffix2, 
+    bldgno3, bldgno3_low, bldgno3_high, street_name3, street_suffix3, 
+    boro_code, zip
 );  
 
 -- delete table with duplicates
