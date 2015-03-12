@@ -1,5 +1,6 @@
 import csv
 import urllib
+import re
 from nyc_geoclient import Geoclient
 from sys import argv
 from sys import exit
@@ -16,9 +17,14 @@ def parse_response(data):
     try:
       return data.get('bbl')
     except AttributeError:
-      pass
       return None
 
+def clean_bldg_no(num):
+  m = re.search('(?P<streetnumber>\d+)(\s+)?(?P<letter>(A-Z))?', num)
+  if m:
+    return m.group(0)
+  else:
+    return num
 
 def ping_geoclient(number, street, code):
   """
@@ -35,24 +41,24 @@ def try_addresses(addresses, boro):
   second = addresses[1]
   third = addresses[2]  
 
-  attempt_one = ping_geoclient(first[0], first[1], boro)
+  attempt_one = ping_geoclient(clean_bldg_no(first[0]), first[1], boro)
 
   if attempt_one == None or 'error' in attempt_one:
-    attempt_two = ping_geoclient(second[0], second[1], boro)
+    attempt_two = ping_geoclient(clean_bldg_no(second[0]), second[1], boro)
 
-  elif attempt_one != None and 'error' not in attempt_one:
+  elif attempt_one and 'error' not in attempt_one:
     return attempt_one
     
   if attempt_two == None or 'error' in attempt_two:
-    attempt_three = ping_geoclient(third[0], third[1], boro)
+    attempt_three = ping_geoclient(clean_bldg_no(third[0]), third[1], boro)
   
-  elif attempt_two != None and 'error' not in attempt_two:
+  elif attempt_two and 'error' not in attempt_two:
     return attempt_two
 
   if attempt_three == None or 'error' in attempt_three:
     return 'null'
 
-  elif attempt_three != None and 'error' not in attempt_three:
+  elif attempt_three and 'error' not in attempt_three:
     return attempt_three
 
 def read_csv(infile, outfile):
