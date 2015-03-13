@@ -5,6 +5,9 @@ from nyc_geoclient import Geoclient
 from sys import argv
 from sys import exit
 
+## TO DO: - fix issue with hyphenated building numbers, 
+## - find out why SSL error occurs with GeoClient API
+
 script, infile, outfile = argv
 g = Geoclient('9cd0a15f', '54dc84bcaca9ff4877da771750033275')
 
@@ -12,7 +15,7 @@ def clean_bldg_no(num):
   """
   Removes a letter from the building number, eg 64A becomes 64
   """
-  m = re.search('(?P<streetnumber>\d+)(\s+)?(?P<letter>(A-Z))?', num)
+  m = re.search('(?P<streetnumber>\S+)(\s+)?(?P<letter>(A-Z))?', num)
   if m:
     return m.group(0)
   else:
