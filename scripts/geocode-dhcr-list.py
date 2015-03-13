@@ -8,23 +8,29 @@ from sys import exit
 script, infile, outfile = argv
 g = Geoclient('9cd0a15f', '54dc84bcaca9ff4877da771750033275')
 
-def parse_response(data):
-  """
-  parses a dictionary response returned by the nyc_geoclient 
-  """
-  bbl = None
-  if type(data) == type({}):
-    try:
-      return data.get('bbl')
-    except AttributeError:
-      return None
-
 def clean_bldg_no(num):
+  """
+  Removes a letter from the building number, eg 64A becomes 64
+  """
   m = re.search('(?P<streetnumber>\d+)(\s+)?(?P<letter>(A-Z))?', num)
   if m:
     return m.group(0)
   else:
     return num
+
+def parse_response(data):
+  """
+  parses a dictionary response returned by the nyc_geoclient 
+  """
+  keys = ['bbl', 'buildingIdentificationNumber', 'message']
+  values = []
+  if type(data) == type({}):
+    for item in keys:
+      try:
+        values.append(data.get(item))
+      except AttributeError:
+        values.append(None)
+  return values
 
 def ping_geoclient(number, street, code):
   """
@@ -43,37 +49,41 @@ def try_addresses(addresses, boro):
 
   attempt_one = ping_geoclient(clean_bldg_no(first[0]), first[1], boro)
 
-  if attempt_one == None or 'error' in attempt_one:
+  if attempt_one[0] is None:
+    print 'attempt one failed, trying second address'
     attempt_two = ping_geoclient(clean_bldg_no(second[0]), second[1], boro)
 
-  elif attempt_one and 'error' not in attempt_one:
+  elif attempt_one[0] is not None:
     return attempt_one
     
-  if attempt_two == None or 'error' in attempt_two:
+  if attempt_two[0] is None:
+    print 'attempt two failed, trying third address'
     attempt_three = ping_geoclient(clean_bldg_no(third[0]), third[1], boro)
-  
-  elif attempt_two and 'error' not in attempt_two:
+
+  elif attempt_two[0] is not None:
     return attempt_two
 
-  if attempt_three == None or 'error' in attempt_three:
-    return 'null'
+  if attempt_three[0] is None:
+    print 'attempt three failed'
+    return attempt_three
 
-  elif attempt_three and 'error' not in attempt_three:
+  elif attempt_three[0] is not None:
     return attempt_three
 
 def read_csv(infile, outfile):
   """
   iterates over an input csv file containing fields for building number, 
   street name, street suffix, boro code, and zipcode
+  writes input csv row with bbl and bin numbers from geoclient api to output csv
   """
   with open(infile, 'rb') as f:
     with open(outfile, 'wb') as w:
       reader = csv.reader(f)
       writer = csv.writer(w)
-      header = next(reader, None) # skip CSV header
+      header = next(reader, None) # skip CSV header      
       writer.writerow(header) # write the header to the outfile      
-      try:
-        for row in reader:
+      for row in reader:      
+        try:
           # reference values for each column
           bldgno = row[1]
           street = row[3]
@@ -84,8 +94,8 @@ def read_csv(infile, outfile):
           bldgno3 = row[11]
           street3 = row[13]
           suffix3 = row[14]          
-          boro_code = row[-3]
-          zipcode = row[-2]                        
+          boro_code = row[-4]
+          zipcode = row[-3]                        
 
           # url encode street name with suffix
           full_street1 = urllib.quote_plus(street + ' ' + suffix)
@@ -98,16 +108,30 @@ def read_csv(infile, outfile):
             [bldgno3, full_street3]
           ]
 
-          # print addresses[0][0], addresses[0][1]
-          # print addresses[1][0], addresses[1][1]
-          # print addresses[2][0], addresses[2][1]
+          parsed_gc_data = try_addresses(addresses, boro_code)
 
-          print 'bbl: ', try_addresses(addresses, boro_code)
-          row[-1] = try_addresses(addresses, boro_code)
-          writer.writerow(row)
+          if parsed_gc_data:
+            row[-2] = parsed_gc_data[0]
+            row[-1] = parsed_gc_data[1]
+            print 'addresss: %s %s %s %s' % (bldgno, street, suffix, boro_code)
+            print 'bbl: %s bin: %s msg: %s \n' % (parsed_gc_data[0], parsed_gc_data[1], parsed_gc_data[2])            
+            writer.writerow(row)
+
+          elif parsed_gc_data is None:
+            print 'geoclient error: %s \n' % parsed_gc_data[2]
       
-      except csv.Error as e:
-        sys.exit('file %s, line %d: %s' % (infile, reader.line_num, e))
+        except csv.Error as e:
+            # todo - append to a csv file; goal is to have a csv of entries that failed.
+            print 'CSV Parse Error:'
+            print 'file %s, line %d: %s' % (infile, reader.line_num, e)
+            print '===\n\n\n'
+
+        except Exception, e:
+            # todo - append to a csv file; goal is to have a csv of entries that failed.
+            print 'Exception: '
+            print e
+            print row
+            print '====\n\n'      
 
 if __name__ == '__main__':
   if len(argv) == 3:
