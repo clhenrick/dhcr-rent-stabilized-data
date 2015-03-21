@@ -29,7 +29,7 @@ Prior to 2009 the data is relatively organized and contains useful information. 
 As the process of registering rent-stabilized apartments with the DHCR is completely voluntary by the landlord the data differs from year to year. As such it should not be assumed that the DHCR's rent stabilized building lists are completely authoritative. Generally speaking a building in NYC may contain rent-stabilized apartments if it was either:
 
 1. Built before 1974, contains more than 6 residential units and is not a coop or condo.
-2. Was built recently and the developer choose to take advantage of tax abatements such as J-51 which require a certain number of units to be placed in rent stabilization, often for a finite period.
+2. Was built recently and the developer choose to take advantage of tax abatements which require a certain number of units to be placed in rent stabilization, often for a finite period.
 
 Thus it may be necessary to do a more comprehensive analysis of Map PLUTO tax lot data as well as new development since 1974 that has received tax abatements to get a better estimate of properties with rent stabilized units.
 
@@ -47,9 +47,7 @@ node index.js 'xlsx/2013 DHCR-5 Boros.xlsx' 'dhcr2013.csv'
 ```
 to process the data to CSV format. Change the name of the `xlsx` file to whatever file you'd like to convert as well as the `csv` file name to whatever you'd like to name the output.
 
-**Note:** I manually either removed or added the `CITY` column from some of the `xlsx` files as they were not consistent across boroughs / sheets. I then saved the edited files with the `xls` extensions. As such the node script will parse excel files with either `xlsx` or `xls` extensions.
-
-
+**Note:** I manually either removed or added the `CITY` column from some of the `xlsx` files as they were not consistent across boroughs / excel workbook sheets. I then saved the edited files with the `xls` extensions as Open Office doesn't support the `xlsx` format. As such the node script will parse excel files with either `xlsx` or `xls` extensions.
 
 
 ## FOIL Request Info
