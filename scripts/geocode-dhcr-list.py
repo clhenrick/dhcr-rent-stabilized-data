@@ -25,7 +25,9 @@ def parse_response(data):
   """
   parses a dictionary response returned by the nyc_geoclient 
   """
-  keys = ['bbl', 'buildingIdentificationNumber', 'message']
+  keys = ['bbl', 'buildingIdentificationNumber',  
+        'latitudeInternalLabel', 'longitudeInternalLabel', 
+        'message']
   values = []
   if type(data) == type({}):
     for item in keys:
@@ -50,28 +52,35 @@ def try_addresses(addresses, boro):
   second = addresses[1]
   third = addresses[2]  
 
-  attempt_one = ping_geoclient(clean_bldg_no(first[0]), first[1], boro)
+  attempt_one = ping_geoclient(first[0], first[1], boro)
 
   if attempt_one[0] is None:
-    print 'attempt one failed, trying second address'
-    attempt_two = ping_geoclient(clean_bldg_no(second[0]), second[1], boro)
+    print 'attempt one failed, trying second address...'
+    attempt_two = ping_geoclient(second[0], second[1], boro)
 
   elif attempt_one[0] is not None:
     return attempt_one
     
   if attempt_two[0] is None:
-    print 'attempt two failed, trying third address'
-    attempt_three = ping_geoclient(clean_bldg_no(third[0]), third[1], boro)
+    print 'attempt two failed, trying third address...'
+    attempt_three = ping_geoclient(third[0], third[1], boro)
 
   elif attempt_two[0] is not None:
     return attempt_two
 
   if attempt_three[0] is None:
-    print 'attempt three failed'
-    return attempt_three
+    print 'attempt three failed, removing letter from building number...'
+    attempt_four = ping_geoclient(clean_bldg_no(first[0]), first[1], boro)
 
   elif attempt_three[0] is not None:
     return attempt_three
+
+  if attempt_four[0] is None:
+    print 'attempt four failed'
+    return attempt_four
+
+  elif attempt_four[0] is not None:
+    return attempt_four
 
 def read_csv(infile, outfile):
   """
@@ -97,8 +106,8 @@ def read_csv(infile, outfile):
           bldgno3 = row[11]
           street3 = row[13]
           suffix3 = row[14]          
-          boro_code = row[-4]
-          zipcode = row[-3]                        
+          boro_code = row[15]
+          zipcode = row[16]
 
           # url encode street name with suffix
           full_street1 = urllib.quote_plus(street + ' ' + suffix)
@@ -114,10 +123,13 @@ def read_csv(infile, outfile):
           parsed_gc_data = try_addresses(addresses, boro_code)
 
           if parsed_gc_data:
-            row[-2] = parsed_gc_data[0]
-            row[-1] = parsed_gc_data[1]
+            row[17] = parsed_gc_data[0]
+            row[18] = parsed_gc_data[1]
+            row[19] = parsed_gc_data[2]
+            row[20] = parsed_gc_data[3]
             print 'addresss: %s %s %s %s' % (bldgno, street, suffix, boro_code)
-            print 'bbl: %s bin: %s msg: %s \n' % (parsed_gc_data[0], parsed_gc_data[1], parsed_gc_data[2])            
+            print 'bbl: %s bin: %s lat: %s lon: %s msg: %s \n' % (parsed_gc_data[0], parsed_gc_data[1], parsed_gc_data[2], 
+                                                                  parsed_gc_data[3], parsed_gc_data[4])            
             writer.writerow(row)
 
           elif parsed_gc_data is None:

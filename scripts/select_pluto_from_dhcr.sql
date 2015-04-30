@@ -12,7 +12,7 @@ select * from map_pluto_2014v2 a, dhcr_tmp_bbls b where a.bbl = b.bbl;
 -- create a table of all pluto tax lots that have matching bbls from dhcr_tmp_bbls
 -- (19 bbls don't match, likely due to NYC Geoclient being more up to date than map pluto?)
 create table map_pluto_dhcr_all as (
-  select a.* from map_pluto_2014v2, dhcr_tmp_bbls b 
+  select a.* from map_pluto_2014v2 a, dhcr_tmp_bbls b 
   where a.bbl = b.bbl
   );
 
@@ -21,7 +21,7 @@ create table map_pluto_dhcr_all as (
 -- 40318 rows
 create table map_pluto_likely_rent_stabl as (
   select * from map_pluto_2014v2
-  where yearbuilt < 1974 and unitsres > 6 
+  where yearbuilt < 1974 and unitsres >= 6 
     and (ownername not ilike 'new york city housing authority' or ownername not ilike 'nycha')
     and bldgclass not ilike 'r%'
 );
@@ -31,6 +31,12 @@ create table map_pluto_likely_rent_stabl as (
 create table map_pluto_likely_rs_not_in_dhcr as (
   select * from map_pluto_likely_rent_stabl a 
   where a.bbl not in (
-    select b.bbl from map_pluto_dhcr_all b
+    select b.bbl from dhcr_unique_bbls b
     )
+);
+
+create table map_pluto_likely_rs_estimate as (
+  select * from map_pluto_likely_rs_not_in_dhcr
+  union
+  select * from map_pluto_dhcr_all
 );
