@@ -1,45 +1,44 @@
--- import the dhcr_all_geocoded into Postgres. Name it dhcr_rs_w_bbs.
--- 
+-- first import the dhcr_all_geocoded into Postgres. Name it dhcr_rs_w_bbs.
 
--- total number of distinct bbls in the dhcr list
+-- total number of DISTINCT bbls in the dhcr list
 -- returns 47,150 rows
-select count(distinct bbl) from dhcr_rs_w_bbls;
+SELECT Count(DISTINCT bbl) FROM dhcr_rs_w_bbls;
 
 
--- select the number of properties on dhcr list in the nyc map pluto data
+-- SELECT the number of properties ON dhcr list in the nyc map pluto data
 -- returns 47,130 rows
-select count(a.bbl) from 
+SELECT Count(a.bbl) FROM 
 	(
-		select distinct bbl from map_pluto2014v2 
-	) as a
+		SELECT DISTINCT bbl FROM map_pluto2014v2 
+	) AS a
 	INNER JOIN
 	(	  
-  	select distinct on (bbl) bbl from dhcr_rs_w_bbls
-  	  where bbl is not null
-	) as b 
+  	SELECT DISTINCT ON (bbl) bbl FROM dhcr_rs_w_bbls
+  	  WHERE bbl IS NOT NULL
+	) AS b 
 	ON a.bbl = b.bbl;
 
 
--- select number of properties in dhcr list NOT in the map pluto "likely rent-stabilized" query 
+-- SELECT number of properties in dhcr list NOT in the map pluto "likely rent-stabilized" query 
 -- returns 12,549 rows
-create table map_pluto2014v2_likely_rs as
-	select count(a.bbl) from 
+CREATE TABLE map_pluto2014v2_likely_rs AS
+	SELECT COUNT(a.bbl) FROM 
 		(
-			select distinct bbl from map_pluto2014v2 
-			where yearbuilt < 1974 and unitsres >= 6 
-			    and (ownername not ilike 'new york city housing authority' or ownername not ilike 'nycha')
-			    and bldgclass not ilike 'r%'	
-		) as a
+			SELECT DISTINCT bbl FROM map_pluto2014v2 
+			WHERE yearbuilt < 1974 AND unitsres >= 6 
+			    AND (ownername NOT ILIKE 'new york city housing authority' or ownername NOT ILIKE 'nycha')
+			    AND bldgclASs NOT ILIKE 'r%'	
+		) AS a
 		LEFT JOIN
 		(	  
-	  	select distinct bbl from dhcr_rs_w_bbls
-	  	where bbl is not null
-		) as b 
+	  	SELECT DISTINCT bbl FROM dhcr_rs_w_bbls
+	  	WHERE bbl IS NOT NULL
+		) AS b 
 		ON a.bbl = b.bbl
-		where b.bbl is null;
+		WHERE b.bbl IS NULL;
 
 
-	--a combination of above two queries...
+	--a combinatiON of above two queries...
 	SELECT * FROM 
 	(
 		SELECT not_dhcr.address, 
@@ -54,22 +53,22 @@ create table map_pluto2014v2_likely_rs as
 					not_dhcr.bbl::bigint				
 		FROM
 			(
-				select a.*
-				from 
+				SELECT a.*
+				FROM 
 				(
-					select * from map_pluto2014v2 
-					where yearbuilt < 1974 and unitsres >= 6 
-					    and (ownername not ilike 'new york city housing authority' or ownername not ilike 'nycha')
-					    and bldgclass not ilike 'r%'	
-				) as a
+					SELECT * FROM map_pluto2014v2 
+					WHERE yearbuilt < 1974 AND unitsres >= 6 
+					    AND (ownername NOT ILIKE 'new york city housing authority' OR ownername NOT ILIKE 'nycha')
+					    AND bldgclass NOT ILIKE 'r%'	
+				) AS a
 				LEFT JOIN
 				(	  
-			  	select * from dhcr_rs_w_bbls
-			  	where bbl is not null
-				) as b 
+			  	SELECT * FROM dhcr_rs_w_bbls
+			  	WHERE bbl IS NOT NULL
+				) AS b 
 				ON a.bbl = b.bbl
-				where b.bbl is null
-			) as not_dhcr
+				WHERE b.bbl IS NULL
+			) AS not_dhcr
 			
 		UNION
 
@@ -84,7 +83,7 @@ create table map_pluto2014v2_likely_rs as
 						dhcr.council,
 						dhcr.bbl::bigint
 		FROM
-			(select c.address, 
+			(SELECT c.address, 
 							c.unitsres, 
 							c.borough, 
 							c.ownername, 
@@ -94,15 +93,15 @@ create table map_pluto2014v2_likely_rs as
 							c.cd,
 							c.council,
 							c.geom
-				from 
+				FROM 
 				map_pluto2014v2 c,
 				(	  
-			  	select distinct bbl from dhcr_rs_w_bbls
-			  	where bbl is not null
+			  	SELECT DISTINCT bbl FROM dhcr_rs_w_bbls
+			  	WHERE bbl IS NOT NULL
 				) d
 				WHERE c.bbl = d.bbl		
-			) as dhcr
-	) as all_the_rows;
+			) AS dhcr
+	) AS all_the_rows;
 
 
 -- Where are the properties located by borough that aren't in the DHCR list?
@@ -114,29 +113,29 @@ create table map_pluto2014v2_likely_rs as
 --  QN      |  1297
 --  SI      |   166
 
-select borough, count(*) as total
-from 
+SELECT borough, COUNT(*) AS total
+FROM 
 (
-	select * from map_pluto2014v2 
-	where yearbuilt < 1974 and unitsres >= 6 
-	    and (ownername not ilike 'new york city housing authority' or ownername not ilike 'nycha')
-	    and bldgclass not ilike 'r%'	
-) as a
+	SELECT * FROM map_pluto2014v2 
+	WHERE yearbuilt < 1974 AND unitsres >= 6 
+	    AND (ownername NOT ILIKE 'new york city housing authority' OR ownername NOT ILIKE 'nycha')
+	    AND bldgclASs NOT ILIKE 'r%'	
+) AS a
 LEFT JOIN
 (	  
-	select * from dhcr_rs_w_bbls
-	where bbl is not null
-) as b 
+	SELECT * FROM dhcr_rs_w_bbls
+	WHERE bbl IS NOT NULL
+) AS b 
 ON a.bbl = b.bbl
-where b.bbl is null
-group by borough
-order by total desc;
+WHERE b.bbl IS NULL
+GROUP BY borough
+ORDER BY total DESC;
 
 
 -- the above query works, but I then wanted to add a boolean to keep track of 
 -- whether or not the property was registered with the DHCR
 -- thus I separated the queries and made two tables:
-CREATE TABLE map_pluto_not_dhcr as
+CREATE TABLE map_pluto_not_dhcr AS
 	SELECT not_dhcr.address, 
 				not_dhcr.unitsres, 
 				not_dhcr.borough, 
@@ -149,22 +148,22 @@ CREATE TABLE map_pluto_not_dhcr as
 				not_dhcr.bbl::bigint				
 	FROM
 		(
-			select a.*
-			from 
+			SELECT a.*
+			FROM 
 			(
-				select * from map_pluto2014v2 
-				where yearbuilt < 1974 and unitsres >= 6 
-				    and (ownername not ilike 'new york city housing authority' or ownername not ilike 'nycha')
-				    and bldgclass not ilike 'r%'	
-			) as a
+				SELECT * FROM map_pluto2014v2 
+				WHERE yearbuilt < 1974 AND unitsres >= 6 
+				    AND (ownername not ILIKE 'new york city housing authority' or ownername not ILIKE 'nycha')
+				    AND bldgclASs not ILIKE 'r%'	
+			) AS a
 			LEFT JOIN
 			(	  
-		  	select * from dhcr_rs_w_bbls
-		  	where bbl is not null
-			) as b 
+		  	SELECT * FROM dhcr_rs_w_bbls
+		  	WHERE bbl IS NOT NULL
+			) AS b 
 			ON a.bbl = b.bbl
-			where b.bbl is null
-		) as not_dhcr;
+			WHERE b.bbl IS NULL
+		) AS not_dhcr;
 
 CREATE TABLE map_pluto_dhcr_rs AS
 	SELECT dhcr.address, 
@@ -178,7 +177,7 @@ CREATE TABLE map_pluto_dhcr_rs AS
 					dhcr.council,
 					dhcr.bbl::bigint
 	FROM
-		(select c.address, 
+		(SELECT c.address, 
 						c.unitsres, 
 						c.borough, 
 						c.ownername, 
@@ -188,29 +187,29 @@ CREATE TABLE map_pluto_dhcr_rs AS
 						c.cd,
 						c.council,
 						c.geom
-			from 
+			FROM 
 			map_pluto2014v2 c,
 			(	  
-		  	select distinct bbl from dhcr_rs_w_bbls
-		  	where bbl is not null
+		  	SELECT DISTINCT bbl FROM dhcr_rs_w_bbls
+		  	WHERE bbl IS NOT NULL
 			) d
 			WHERE c.bbl = d.bbl		
-		) as dhcr;
+		) AS dhcr;
 
 
 -- I then added a column to identify properties that are registered or not registered with the DHCR:
-alter table map_pluto_not_dhcr add column registered boolean;
-update map_pluto_not_dhcr set registered = false;
+ALTER TABLE map_pluto_not_dhcr add column registered boolean;
+UPDATE map_pluto_not_dhcr set registered = false;
 
-alter table map_pluto_dhcr_rs add column registered boolean;
-update map_pluto_dhcr_rs set registered = true;
+ALTER TABLE map_pluto_dhcr_rs add column registered boolean;
+UPDATE map_pluto_dhcr_rs set registered = true;
 
 
--- now these two tables can be combined and have a boolean value for whether or not 
--- they are on the DHCR's list. 
+-- now these two tables can be combined AND have a boolean value for whether or not 
+-- they are in the DHCR's rent-stabilized buildings list. 
 -- 59,679 rows total.
-drop table map_pluto2014v2_likely_rs;
-create table map_pluto_likely_rs as
+DROP TABLE map_pluto2014v2_likely_rs;
+CREATE TABLE map_pluto_likely_rs AS
 	SELECT * 
 	FROM
 		map_pluto_not_dhcr
@@ -221,31 +220,50 @@ create table map_pluto_likely_rs as
 
 
 -- check to make sure the data looks good:
-select count(*) from map_pluto_likely_rs where registered is null;
+SELECT Count(*) FROM map_pluto_likely_rs WHERE registered IS NULL;
 	-- returns 0 rows
-select count(distinct bbl) from map_pluto_likely_rs;
+SELECT Count(DISTINCT bbl) FROM map_pluto_likely_rs;
   -- returns 59,679 rows
-select count(*) from map_pluto_likely_rs where geom is null;
+SELECT Count(*) FROM map_pluto_likely_rs WHERE geom IS NULL;
 	-- returns 0 rows
-select sum(unitsres) as total_res_units from map_pluto_likely_rs;
+SELECT Sum(unitsres) AS total_res_units FROM map_pluto_likely_rs;
 	-- returns 1,962,469
 
 
 --  In CartoDB....
---  remove all properties owned by the NYC Housing Authority
-delete FROM map_pluto_likely_rs where ownername ilike 'NYC HOUSING%';
-delete from map_pluto_likely_rs where ownername ilike 'new york city%'
+--  remove all properties owned by the NYC Housing Authority that I missed.
+--  Part of this involved doing a spatial intersect with the NYCHA shapefile 
+--  available on NYC Open Data to determine all spellings of NYCHA:
+SELECT DISTINCT a.ownername 
+FROM map_pluto_likely_rs a, nycha_centroids b
+where 
+  ST_Intersects(
+      a.the_geom, b.the_geom
+  )
+ORDER BY ownername
 
--- pgsql2shp converted boolean's to T / F, change to 'yes' / 'no' for infowindows
-update map_pluto_likely_rs set registered = 'no' where registered = 'F';
-update map_pluto_likely_rs set registered = 'yes' where registered = 'T';
+-- remove properties that are obviously owned by NYCHA
+DELETE FROM map_pluto_likely_rs WHERE ownername ILIKE 'NYC HOUSING%';
+DELETE FROM map_pluto_likely_rs WHERE ownername ILIKE 'new york city%';
+DELETE FROM map_pluto_likely_rs WHERE ownername ILIKE 'NYC CITY HSG%';
+DELETE FROM map_pluto_likely_rs WHERE ownername = 'CITY OF NEW YORK';
+DELETE FROM map_pluto_likely_rs WHERE ownername ILIKE 'N Y C H A%';
+DELETE FROM map_pluto_likely_rs WHERE ownername ILIKE 'N.Y.C. HOUSING AUTHOR%';
+DELETE FROM map_pluto_likely_rs WHERE ownername ILIKE 'N Y C HOUSING AUTHORI%';
+DELETE FROM map_pluto_likely_rs WHERE ownername = 'NY HOUSING AUTHORITY';
+DELETE FROM map_pluto_likely_rs WHERE ownername = 'NEW YRK CTY HSG AUTHR';
 
--- change boro codes to actual names
-update map_pluto_likely_rs set borough = 'Queens' where borough = 'QN';
-update map_pluto_likely_rs set borough = 'Brooklyn' where borough = 'BK';
-update map_pluto_likely_rs set borough = 'Staten Island' where borough = 'SI';
-update map_pluto_likely_rs set borough = 'Bronx' where borough = 'BX';
-update map_pluto_likely_rs set borough = 'Manhattan' where borough = 'MN';
+-- pgsql2shp converted boolean value of the "registered" column to T / F, 
+-- so I changed the valuse to 'yes' / 'no' for infowindows
+UPDATE map_pluto_likely_rs set registered = 'no' WHERE registered = 'F';
+UPDATE map_pluto_likely_rs set registered = 'yes' WHERE registered = 'T';
+
+-- change boro codes to actual names for infowindows
+UPDATE map_pluto_likely_rs set borough = 'Queens' WHERE borough = 'QN';
+UPDATE map_pluto_likely_rs set borough = 'Brooklyn' WHERE borough = 'BK';
+UPDATE map_pluto_likely_rs set borough = 'Staten Island' WHERE borough = 'SI';
+UPDATE map_pluto_likely_rs set borough = 'Bronx' WHERE borough = 'BX';
+UPDATE map_pluto_likely_rs set borough = 'Manhattan' WHERE borough = 'MN';
 
 
 
