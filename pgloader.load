@@ -13,6 +13,8 @@ LOAD CSV
   BEFORE LOAD DO
      $$ drop table if exists dhcrlist; $$,
      $$ create table if not exists dhcrlist (
+          bbl bigint,
+          year int,
           zip int,
           bldgno1 text,
           street_name1 text,
@@ -30,7 +32,11 @@ LOAD CSV
           lot int,
           boro_code smallint
         );
-   $$;
+     $$
+  AFTER LOAD DO
+     $$ update dhcrlist set year = 2009 where year is null;
+     $$
+;
 
 LOAD CSV
   FROM csv/dhcr2011.csv
@@ -44,6 +50,9 @@ LOAD CSV
   WITH skip header = 2,
        fields optionally enclosed by '"',
        fields terminated by ','
+  AFTER LOAD DO
+     $$ update dhcrlist set year = 2011 where year is null;
+     $$
 ;
 
 LOAD CSV
@@ -58,6 +67,9 @@ LOAD CSV
   WITH skip header = 2,
        fields optionally enclosed by '"',
        fields terminated by ','
+  AFTER LOAD DO
+     $$ update dhcrlist set year = 2012 where year is null;
+     $$
 ;
 
 LOAD CSV
@@ -72,4 +84,10 @@ LOAD CSV
   WITH skip header = 2,
        fields optionally enclosed by '"',
        fields terminated by ','
-;
+  AFTER LOAD DO
+     $$ update dhcrlist set year = 2013 where year is null;
+     $$,
+     $$ update dhcrlist set bbl = cast(boro_code || right('00000' || block::text, 5) || right('0000' || lot::text, 4) as bigint)
+     $$,
+     $$ create index year_bbl on dhcrlist (bbl, year);
+     $$;
