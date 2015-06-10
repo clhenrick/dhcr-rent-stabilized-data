@@ -1,0 +1,93 @@
+LOAD CSV
+  FROM csv/dhcr2009.csv
+       ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
+         street_name2, street_suffix2,  bldgno3, street_name3, street_suffix3,
+         city, status1, status2, status3, block, lot, boro_code)
+  INTO postgresql:///?dhcrlist
+       ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
+         street_name2, street_suffix2,
+         status1, status2,  status3, block, lot, boro_code)
+  WITH skip header = 2,
+       fields optionally enclosed by '"',  
+       fields terminated by ','
+  BEFORE LOAD DO
+     $$ drop table if exists dhcrlist; $$,
+     $$ create table if not exists dhcrlist (
+          bbl bigint,
+          year int,
+          zip int,
+          bldgno1 text,
+          street_name1 text,
+          street_suffix1 text,
+          bldgno2 text,
+          street_name2 text,
+          street_suffix2 text,
+          --bldgno3 text,
+          --street_name3 text,
+          --street_suffix3 text,
+          status1 text,
+          status2 text,
+          status3 text,
+          block int,
+          lot int,
+          boro_code smallint
+        );
+     $$
+  AFTER LOAD DO
+     $$ update dhcrlist set year = 2009 where year is null;
+     $$
+;
+
+LOAD CSV
+  FROM csv/dhcr2011.csv
+       ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
+         street_name2, street_suffix2,  bldgno3, street_name3, street_suffix3,
+         status1, status2, status3, block, lot, boro_code)
+  INTO postgresql:///?dhcrlist
+       ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
+         street_name2, street_suffix2,
+         status1, status2, status3, block, lot, boro_code)
+  WITH skip header = 2,
+       fields optionally enclosed by '"',
+       fields terminated by ','
+  AFTER LOAD DO
+     $$ update dhcrlist set year = 2011 where year is null;
+     $$
+;
+
+LOAD CSV
+  FROM csv/dhcr2012.csv
+       ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
+         street_name2, street_suffix2,  bldgno3, street_name3, street_suffix3,
+         status1, status2, status3, block, lot, boro_code)
+  INTO postgresql:///?dhcrlist
+       ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
+         street_name2, street_suffix2,
+         status1, status2, status3, block, lot, boro_code)
+  WITH skip header = 2,
+       fields optionally enclosed by '"',
+       fields terminated by ','
+  AFTER LOAD DO
+     $$ update dhcrlist set year = 2012 where year is null;
+     $$
+;
+
+LOAD CSV
+  FROM csv/dhcr2013.csv
+       ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
+         street_name2, street_suffix2, city,
+         status1, status2, status3, block, lot, boro_code)
+  INTO postgresql:///?dhcrlist
+       ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
+         street_name2, street_suffix2,
+         status1, status2, status3, block, lot, boro_code)
+  WITH skip header = 2,
+       fields optionally enclosed by '"',
+       fields terminated by ','
+  AFTER LOAD DO
+     $$ update dhcrlist set year = 2013 where year is null;
+     $$,
+     $$ update dhcrlist set bbl = cast(boro_code || right('00000' || block::text, 5) || right('0000' || lot::text, 4) as bigint)
+     $$,
+     $$ create index year_bbl on dhcrlist (bbl, year);
+     $$;
