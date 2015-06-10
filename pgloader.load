@@ -3,7 +3,7 @@ LOAD CSV
        ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
          street_name2, street_suffix2,  bldgno3, street_name3, street_suffix3,
          city, status1, status2, status3, block, lot, boro_code)
-  INTO postgresql://postgres:docker4data@localhost:54321/postgres?dhcrlist
+  INTO postgresql:///?dhcrlist
        ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
          street_name2, street_suffix2,
          status1, status2,  status3, block, lot, boro_code)
@@ -43,7 +43,7 @@ LOAD CSV
        ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
          street_name2, street_suffix2,  bldgno3, street_name3, street_suffix3,
          status1, status2, status3, block, lot, boro_code)
-  INTO postgresql://postgres:docker4data@localhost:54321/postgres?dhcrlist
+  INTO postgresql:///?dhcrlist
        ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
          street_name2, street_suffix2,
          status1, status2, status3, block, lot, boro_code)
@@ -60,7 +60,7 @@ LOAD CSV
        ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
          street_name2, street_suffix2,  bldgno3, street_name3, street_suffix3,
          status1, status2, status3, block, lot, boro_code)
-  INTO postgresql://postgres:docker4data@localhost:54321/postgres?dhcrlist
+  INTO postgresql:///?dhcrlist
        ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
          street_name2, street_suffix2,
          status1, status2, status3, block, lot, boro_code)
@@ -77,7 +77,7 @@ LOAD CSV
        ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
          street_name2, street_suffix2, city,
          status1, status2, status3, block, lot, boro_code)
-  INTO postgresql://postgres:docker4data@localhost:54321/postgres?dhcrlist
+  INTO postgresql:///?dhcrlist
        ( zip, bldgno1, street_name1, street_suffix1, bldgno2,
          street_name2, street_suffix2,
          status1, status2, status3, block, lot, boro_code)
